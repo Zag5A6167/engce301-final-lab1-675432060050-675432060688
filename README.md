@@ -2,7 +2,7 @@
 
 ## Group Information
 
-- **Section:** —
+- **Section:** Sec_1
 - **Group No:** PZMT
 - **Repository:** `engce301-final-lab1-675432060050-675432060688`
 
