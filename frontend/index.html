@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>🔐 Task Board — Final Lab</title>
   <style>
-    /* ── นำ CSS จาก Week 12 index.html มาทั้งหมด ── */
-    /* ── (copy จาก :root { } ถึง @keyframes spin) ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --bg: #0f172a; --surface: #1e293b; --surface2: #273448;
@@ -14,7 +12,265 @@
       --blue: #3b82f6; --green: #22c55e; --yellow: #f59e0b;
       --red: #ef4444; --purple: #a855f7;
     }
-    /* ... (copy CSS จาก Week 12) ... */
+
+    /* ── Base ── */
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    .hidden { display: none !important; }
+
+    /* ── AUTH PAGE ── */
+    #auth-page {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(ellipse at 60% 40%, #1e3a5f 0%, var(--bg) 70%);
+    }
+    .auth-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 2.5rem 2rem;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 25px 60px rgba(0,0,0,.5);
+    }
+    .auth-logo { font-size: 2.5rem; text-align: center; margin-bottom: .5rem; }
+    .auth-title { font-size: 1.5rem; font-weight: 700; text-align: center; }
+    .auth-subtitle { color: var(--muted); font-size: .875rem; text-align: center; margin-bottom: 2rem; }
+
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: .8rem; color: var(--muted); margin-bottom: .35rem; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; }
+    .form-group input {
+      width: 100%; background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: .5rem; padding: .65rem .9rem;
+      color: var(--text); font-size: .95rem;
+      transition: border-color .2s;
+    }
+    .form-group input:focus { outline: none; border-color: var(--blue); }
+
+    .btn-primary {
+      width: 100%; padding: .75rem;
+      background: var(--blue); color: #fff;
+      border: none; border-radius: .5rem;
+      font-size: 1rem; font-weight: 600; cursor: pointer;
+      transition: background .2s, transform .1s;
+      margin-top: .5rem;
+    }
+    .btn-primary:hover { background: #2563eb; }
+    .btn-primary:active { transform: scale(.98); }
+
+    .auth-msg { margin-top: .75rem; font-size: .875rem; text-align: center; min-height: 1.2em; }
+    .auth-msg.error { color: var(--red); }
+    .auth-msg.success { color: var(--green); }
+
+    /* ── LAYOUT ── */
+    #app-page { flex: 1; display: flex; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 240px; min-height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      padding: 1.5rem 1rem;
+      position: sticky; top: 0; height: 100vh;
+    }
+    .sidebar-logo { font-size: 1.1rem; font-weight: 700; padding: .5rem .75rem 1.5rem; letter-spacing: -.01em; }
+    .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: .25rem; }
+
+    .nav-item {
+      display: flex; align-items: center; gap: .65rem;
+      padding: .6rem .75rem; border-radius: .5rem;
+      background: none; border: none; color: var(--muted);
+      font-size: .9rem; cursor: pointer; width: 100%;
+      text-align: left; transition: background .15s, color .15s;
+    }
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active { background: rgba(59,130,246,.15); color: var(--blue); font-weight: 600; }
+    .nav-icon { font-size: 1rem; }
+
+    .badge-count {
+      margin-left: auto; background: var(--blue);
+      color: #fff; border-radius: 999px;
+      font-size: .7rem; font-weight: 700;
+      padding: .1rem .45rem; min-width: 1.3rem; text-align: center;
+    }
+
+    .sidebar-footer { border-top: 1px solid var(--border); padding-top: 1rem; }
+    .user-chip { display: flex; align-items: center; gap: .65rem; }
+    .user-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--blue); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 1rem; flex-shrink: 0;
+    }
+    .user-info-small { flex: 1; min-width: 0; }
+    .user-info-small .name { font-size: .85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .btn-logout {
+      background: none; border: none; color: var(--muted);
+      cursor: pointer; font-size: 1rem; padding: .25rem;
+      border-radius: .25rem; transition: color .15s;
+    }
+    .btn-logout:hover { color: var(--red); }
+
+    /* role badge */
+    .role-badge { font-size: .7rem; font-weight: 700; padding: .1rem .45rem; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; }
+    .role-admin   { background: rgba(168,85,247,.2); color: var(--purple); }
+    .role-member  { background: rgba(59,130,246,.15); color: var(--blue); }
+
+    /* ── MAIN CONTENT ── */
+    .main-content { flex: 1; padding: 2rem; overflow-y: auto; }
+
+    /* ── PAGE HEADERS ── */
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+    .page-title { font-size: 1.4rem; font-weight: 700; }
+
+    /* ── FILTER BAR ── */
+    .filter-bar { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .filter-btn {
+      padding: .4rem .9rem; border-radius: 999px;
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--muted); font-size: .82rem; cursor: pointer;
+      transition: all .15s;
+    }
+    .filter-btn:hover { border-color: var(--blue); color: var(--text); }
+    .filter-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 600; }
+
+    /* ── TASK GRID ── */
+    .task-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+    .task-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: .75rem; padding: 1.1rem;
+      transition: border-color .2s, transform .15s;
+      cursor: default;
+    }
+    .task-card:hover { border-color: var(--blue); transform: translateY(-2px); }
+
+    .task-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem; margin-bottom: .75rem; }
+    .task-title { font-size: .95rem; font-weight: 600; flex: 1; }
+    .task-actions { display: flex; gap: .35rem; }
+    .task-actions button {
+      background: none; border: none; cursor: pointer;
+      font-size: .85rem; padding: .2rem .3rem; border-radius: .3rem;
+      transition: background .15s;
+    }
+    .task-actions button:hover { background: var(--surface2); }
+
+    .task-desc { font-size: .83rem; color: var(--muted); margin-bottom: .85rem; line-height: 1.5; }
+    .task-meta { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .4rem; }
+
+    /* status badges */
+    .status-badge { font-size: .72rem; font-weight: 700; padding: .2rem .6rem; border-radius: 999px; text-transform: uppercase; letter-spacing: .05em; }
+    .status-TODO       { background: rgba(148,163,184,.15); color: var(--muted); }
+    .status-IN_PROGRESS{ background: rgba(245,158,11,.15);  color: var(--yellow); }
+    .status-DONE       { background: rgba(34,197,94,.15);   color: var(--green); }
+
+    .task-date { font-size: .75rem; color: var(--muted); }
+
+    .empty-state { text-align: center; padding: 4rem 1rem; color: var(--muted); }
+    .empty-state-icon { font-size: 3rem; margin-bottom: 1rem; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .55rem 1.1rem; border-radius: .5rem;
+      font-size: .9rem; font-weight: 600; cursor: pointer;
+      border: none; transition: background .15s, transform .1s;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn-blue   { background: var(--blue);   color: #fff; }
+    .btn-blue:hover { background: #2563eb; }
+    .btn-red    { background: var(--red);    color: #fff; }
+    .btn-red:hover { background: #dc2626; }
+    .btn-ghost  { background: var(--surface2); color: var(--text); }
+    .btn-ghost:hover { background: var(--border); }
+    .btn-sm { padding: .35rem .75rem; font-size: .82rem; }
+
+    /* ── PROFILE PAGE ── */
+    .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 800px) { .profile-grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: .75rem; padding: 1.5rem;
+    }
+    .card-title { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; }
+
+    .info-row { display: flex; justify-content: space-between; padding: .5rem 0; border-bottom: 1px solid var(--border); font-size: .875rem; }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: var(--muted); }
+
+    /* JWT Inspector */
+    .jwt-part { background: var(--bg); border-radius: .5rem; padding: .75rem; margin-bottom: .75rem; font-size: .8rem; }
+    .jwt-part-header { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: .5rem; }
+    .jwt-part.header-part .jwt-part-header { color: var(--red); }
+    .jwt-part.payload-part .jwt-part-header { color: var(--purple); }
+    .jwt-part.sig-part .jwt-part-header { color: var(--blue); }
+    .jwt-key { color: var(--muted); }
+    .jwt-val { color: var(--green); }
+
+    /* ── MODAL ── */
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.6); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100; padding: 1rem;
+    }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 1rem; padding: 1.75rem;
+      width: 100%; max-width: 480px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    }
+    .modal-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 1.25rem; }
+    .modal-actions { display: flex; gap: .75rem; justify-content: flex-end; margin-top: 1.5rem; }
+
+    select {
+      width: 100%; background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: .5rem; padding: .65rem .9rem;
+      color: var(--text); font-size: .95rem;
+      cursor: pointer;
+    }
+    select:focus { outline: none; border-color: var(--blue); }
+
+    textarea {
+      width: 100%; background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: .5rem; padding: .65rem .9rem;
+      color: var(--text); font-size: .95rem; resize: vertical;
+      font-family: inherit;
+    }
+    textarea:focus { outline: none; border-color: var(--blue); }
+
+    /* ── TOAST ── */
+    #toast-container {
+      position: fixed; bottom: 1.5rem; right: 1.5rem;
+      display: flex; flex-direction: column; gap: .5rem; z-index: 999;
+    }
+    .toast {
+      padding: .75rem 1.25rem; border-radius: .6rem;
+      font-size: .875rem; font-weight: 500;
+      animation: slideIn .25s ease; min-width: 220px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.4);
+    }
+    .toast.success { background: var(--green); color: #fff; }
+    .toast.error   { background: var(--red);   color: #fff; }
+    .toast.info    { background: var(--blue);  color: #fff; }
+
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .spinner { display: inline-block; width: 1rem; height: 1rem; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; }
   </style>
 </head>
 <body>
@@ -82,15 +338,89 @@
   </nav>
 
   <div class="main-content">
-    <!-- TASKS PAGE — copy จาก Week 12 ทั้งหมด -->
-    <div id="page-tasks"> <!-- ... เหมือน Week 12 ... --> </div>
+    <!-- TASKS PAGE -->
+    <div id="page-tasks">
+      <div class="page-header">
+        <div class="page-title">✅ Tasks</div>
+        <button class="btn btn-blue" onclick="openCreateModal()">＋ สร้าง Task</button>
+      </div>
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="setFilter('ALL', this)">ทั้งหมด</button>
+        <button class="filter-btn" onclick="setFilter('TODO', this)">TODO</button>
+        <button class="filter-btn" onclick="setFilter('IN_PROGRESS', this)">In Progress</button>
+        <button class="filter-btn" onclick="setFilter('DONE', this)">Done</button>
+      </div>
+      <div id="task-grid" class="task-grid"></div>
+    </div>
 
-    <!-- PROFILE PAGE — copy จาก Week 12 ทั้งหมด -->
-    <div id="page-profile" class="hidden"> <!-- ... เหมือน Week 12 ... --> </div>
+    <!-- PROFILE PAGE -->
+    <div id="page-profile" class="hidden">
+      <div class="page-header">
+        <div class="page-title">👤 Profile &amp; JWT</div>
+      </div>
+      <div class="profile-grid">
+        <div class="card">
+          <div class="card-title">ข้อมูลผู้ใช้</div>
+          <div id="profile-info"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🔍 JWT Inspector</div>
+          <div id="jwt-inspector"></div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- Modals + Toast — copy จาก Week 12 -->
+<!-- ════ MODAL: Create/Edit Task ════ -->
+<div id="task-modal" class="modal-backdrop hidden">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">สร้าง Task ใหม่</div>
+    <div class="form-group">
+      <label>ชื่อ Task *</label>
+      <input id="task-title" type="text" placeholder="ชื่อ task...">
+    </div>
+    <div class="form-group">
+      <label>รายละเอียด</label>
+      <textarea id="task-desc" rows="3" placeholder="รายละเอียด (ถ้ามี)"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Status</label>
+      <select id="task-status">
+        <option value="TODO">TODO</option>
+        <option value="IN_PROGRESS">In Progress</option>
+        <option value="DONE">Done</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Priority</label>
+      <select id="task-priority">
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
+        <option value="low">Low</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn btn-blue" onclick="submitTask()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MODAL: Confirm Delete ════ -->
+<div id="delete-modal" class="modal-backdrop hidden">
+  <div class="modal">
+    <div class="modal-title">🗑️ ยืนยันการลบ</div>
+    <p style="color:var(--muted);font-size:.9rem">ต้องการลบ task นี้ใช่ไหม? ไม่สามารถกู้คืนได้</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeDeleteModal()">ยกเลิก</button>
+      <button class="btn btn-red" onclick="doDelete()">ลบ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ TOAST ════ -->
+<div id="toast-container"></div>
 
 <script>
 /* ── STATE ── */
@@ -160,14 +490,171 @@ function showPage(page) {
   if (page === 'profile') loadProfile();
 }
 
-/* ── TASKS, PROFILE, JWT INSPECTOR ──
-   Copy ทั้งหมดจาก Week 12 app.js
-   (loadTasks, renderTasks, openCreateModal,
-    submitTask, confirmDelete, loadProfile,
-    renderJwtInspector, escHtml)
-*/
+/* ── TASKS ── */
+let editingTaskId = null;
+let deletingTaskId = null;
 
-// ... (copy functions จาก Week 12) ...
+async function loadTasks() {
+  const res  = await fetch(`${API}/api/tasks/`, { headers: { Authorization: `Bearer ${token}` } });
+  if (res.status === 401) { doLogout(); return; }
+  const data = await res.json();
+  allTasks = data.tasks || [];
+  document.getElementById('task-count').textContent = allTasks.length;
+  renderTasks();
+}
+
+function setFilter(status, btn) {
+  currentFilter = status;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTasks();
+}
+
+function renderTasks() {
+  const tasks = currentFilter === 'ALL'
+    ? allTasks
+    : allTasks.filter(t => t.status === currentFilter);
+  const grid = document.getElementById('task-grid');
+  if (!tasks.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="empty-state-icon">📭</div>
+      <div>ยังไม่มี task ในหมวดนี้</div></div>`;
+    return;
+  }
+  grid.innerHTML = tasks.map(t => `
+    <div class="task-card">
+      <div class="task-card-header">
+        <div class="task-title">${escHtml(t.title)}</div>
+        <div class="task-actions">
+          <button onclick="editTask(${t.id})" title="แก้ไข">✏️</button>
+          <button onclick="confirmDelete(${t.id})" title="ลบ">🗑️</button>
+        </div>
+      </div>
+      ${t.description ? `<div class="task-desc">${escHtml(t.description)}</div>` : ''}
+      <div class="task-meta">
+        <span class="status-badge status-${t.status}">${t.status.replace('_',' ')}</span>
+        <span class="task-date">${new Date(t.created_at).toLocaleDateString('th-TH')}</span>
+      </div>
+    </div>`).join('');
+}
+
+function openCreateModal() {
+  editingTaskId = null;
+  document.getElementById('modal-title').textContent = 'สร้าง Task ใหม่';
+  document.getElementById('task-title').value  = '';
+  document.getElementById('task-desc').value   = '';
+  document.getElementById('task-status').value = 'TODO';
+  document.getElementById('task-priority').value = 'medium';
+  document.getElementById('task-modal').classList.remove('hidden');
+}
+
+function editTask(id) {
+  const t = allTasks.find(t => t.id === id);
+  if (!t) return;
+  editingTaskId = id;
+  document.getElementById('modal-title').textContent = 'แก้ไข Task';
+  document.getElementById('task-title').value    = t.title;
+  document.getElementById('task-desc').value     = t.description || '';
+  document.getElementById('task-status').value   = t.status;
+  document.getElementById('task-priority').value = t.priority;
+  document.getElementById('task-modal').classList.remove('hidden');
+}
+
+async function submitTask() {
+  const title       = document.getElementById('task-title').value.trim();
+  const description = document.getElementById('task-desc').value.trim();
+  const status      = document.getElementById('task-status').value;
+  const priority    = document.getElementById('task-priority').value;
+  if (!title) { showToast('กรุณาใส่ชื่อ task', 'error'); return; }
+
+  const method = editingTaskId ? 'PUT' : 'POST';
+  const url    = editingTaskId ? `${API}/api/tasks/${editingTaskId}` : `${API}/api/tasks/`;
+  const res    = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ title, description, status, priority })
+  });
+  if (res.ok) {
+    closeModal();
+    showToast(editingTaskId ? '✅ แก้ไขสำเร็จ' : '✅ สร้าง Task สำเร็จ', 'success');
+    loadTasks();
+  } else {
+    const d = await res.json();
+    showToast('❌ ' + (d.error || 'เกิดข้อผิดพลาด'), 'error');
+  }
+}
+
+function confirmDelete(id) {
+  deletingTaskId = id;
+  document.getElementById('delete-modal').classList.remove('hidden');
+}
+
+async function doDelete() {
+  const res = await fetch(`${API}/api/tasks/${deletingTaskId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  closeDeleteModal();
+  if (res.ok) { showToast('🗑️ ลบ task เรียบร้อย', 'success'); loadTasks(); }
+  else showToast('❌ ลบไม่สำเร็จ', 'error');
+}
+
+function closeModal()       { document.getElementById('task-modal').classList.add('hidden'); }
+function closeDeleteModal() { document.getElementById('delete-modal').classList.add('hidden'); }
+
+/* ── PROFILE & JWT ── */
+async function loadProfile() {
+  const res  = await fetch(`${API}/api/auth/me`, { headers: { Authorization: `Bearer ${token}` } });
+  const data = await res.json();
+  const user = data.user || currentUser;
+
+  document.getElementById('profile-info').innerHTML = `
+    <div class="info-row"><span class="info-label">Username</span><span>${escHtml(user.username||'—')}</span></div>
+    <div class="info-row"><span class="info-label">Email</span><span>${escHtml(user.email||'—')}</span></div>
+    <div class="info-row"><span class="info-label">Role</span><span class="role-badge role-${user.role}">${user.role}</span></div>
+    <div class="info-row"><span class="info-label">Last Login</span><span>${user.last_login ? new Date(user.last_login).toLocaleString('th-TH') : '—'}</span></div>
+    <div class="info-row"><span class="info-label">Created</span><span>${user.created_at ? new Date(user.created_at).toLocaleDateString('th-TH') : '—'}</span></div>`;
+
+  renderJwtInspector();
+}
+
+function renderJwtInspector() {
+  if (!token) return;
+  const parts = token.split('.');
+  const decode = s => { try { return JSON.parse(atob(s.replace(/-/g,'+').replace(/_/g,'/'))); } catch { return {}; } };
+  const header  = decode(parts[0]);
+  const payload = decode(parts[1]);
+
+  const fmt = obj => Object.entries(obj).map(([k,v]) =>
+    `<div><span class="jwt-key">"${escHtml(k)}"</span>: <span class="jwt-val">${
+      k==='exp'||k==='iat' ? `${v} <small style="color:var(--muted)">(${new Date(v*1000).toLocaleString('th-TH')})</small>` : `"${escHtml(String(v))}"`
+    }</span></div>`).join('');
+
+  document.getElementById('jwt-inspector').innerHTML = `
+    <div class="jwt-part header-part">
+      <div class="jwt-part-header">Header</div>${fmt(header)}
+    </div>
+    <div class="jwt-part payload-part">
+      <div class="jwt-part-header">Payload</div>${fmt(payload)}
+    </div>
+    <div class="jwt-part sig-part">
+      <div class="jwt-part-header">Signature</div>
+      <div style="word-break:break-all;color:var(--blue);font-family:'Courier New',monospace;font-size:.72rem">${parts[2]}</div>
+    </div>`;
+}
+
+/* ── TOAST ── */
+function showToast(msg, type = 'info') {
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  document.getElementById('toast-container').appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 
 /* ── AUTO-LOGIN ── */
 if (token) {

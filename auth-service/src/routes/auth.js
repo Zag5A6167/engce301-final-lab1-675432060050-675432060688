@@ -42,8 +42,9 @@ router.post('/login', async (req, res) => {
     const user = result.rows[0];
 
     // Timing attack prevention
-    const cleanHash = (passwordHash || '').trim();
-    const isValid = await bcrypt.compare(trimmedPassword, cleanHash);
+    const dummyHash = '$2b$10$invalidhashpaddinginvalidhashpaddinginvalidhashpadding00';
+    const passwordHash = user ? user.password_hash : dummyHash;
+    const isValid = await bcrypt.compare(password, passwordHash);
 
     if (!user || !isValid) {
       await logEvent({ level:'WARN', event:'LOGIN_FAILED',
